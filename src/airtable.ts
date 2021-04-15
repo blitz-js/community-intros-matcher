@@ -19,15 +19,6 @@ async function fetchTable<Fields>(table: string) {
 }
 
 export async function fetchParticipants(): Promise<Participant[]> {
-  await fetch(
-    "https://api.airtable.com/v0/appscxwnCFERwGhlO/Participants?maxRecords=3&view=Grid%20view",
-    {
-      headers: {
-        Authorization: "Bearer " + apiKey,
-      },
-    }
-  );
-
   const participants = await fetchTable<{
     Dates: string[];
     "Discord Name": string;
