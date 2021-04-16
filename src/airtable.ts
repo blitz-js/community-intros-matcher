@@ -20,26 +20,28 @@ async function fetchTable<Fields>(table: string) {
 
 export async function fetchParticipants(): Promise<Participant[]> {
   const participants = await fetchTable<{
-    Dates: string[];
+    Dates?: string[];
     "Discord Name": string;
   }>("Participants");
-  const dates = await fetchTable<{ ID: number; Participants: string[] }>(
+  const dates = await fetchTable<{ ID: number; Participants?: string[] }>(
     "Dates"
   );
 
   return participants.map((record) => {
+    const { "Discord Name": username, Dates = [] } = record.fields;
     return {
-      username: record.fields["Discord Name"],
-      dates: record.fields.Dates.map(
-        (dateId) => dates.find((d) => d.id === dateId)!
-      ).map((d) => {
-        const otherOne = d.fields.Participants.find((p) => p !== record.id)!;
-        return {
-          username: participants.find((p) => p.id === otherOne)!.fields[
-            "Discord Name"
-          ],
-        };
-      }),
+      username,
+      dates: Dates.map((dateId) => dates.find((d) => d.id === dateId)!).map(
+        (d) => {
+          const { Participants = [] } = d.fields;
+          const otherOne = Participants.find((p) => p !== record.id)!;
+          return {
+            username: participants.find((p) => p.id === otherOne)!.fields[
+              "Discord Name"
+            ],
+          };
+        }
+      ),
     };
   });
 }
