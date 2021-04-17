@@ -28,24 +28,30 @@ export async function fetchParticipants(): Promise<Participant[]> {
     "Dates"
   );
 
+  function findById<T extends { id: string }>(items: T[], id: string): T {
+    return items.find((v) => v.id === id)!;
+  }
+  const findDateById = (id: string) => findById(dates, id);
+  const findParticipantById = (id: string) => findById(allParticipants, id);
+
   const activeParticipants = allParticipants.filter((p) => !p.fields.Inactive);
   const participants = activeParticipants;
 
   return participants.map((record) => {
     const { "Discord Name": username, Dates = [] } = record.fields;
+
     return {
       username,
-      dates: Dates.map((dateId) => dates.find((d) => d.id === dateId)!).map(
-        (d) => {
-          const { Participants = [] } = d.fields;
-          const otherOne = Participants.find((p) => p !== record.id)!;
-          return {
-            username: participants.find((p) => p.id === otherOne)!.fields[
-              "Discord Name"
-            ],
-          };
+      dates: Dates.map(findDateById).map((d) => {
+        if (!d.fields.Participants) {
+          throw new Error("Date w/o Participants!");
         }
-      ),
+        const [first, second] = d.fields.Participants;
+        const otherOne = first === record.id ? second : first;
+        return {
+          username: findParticipantById(otherOne).fields["Discord Name"],
+        };
+      }),
     };
   });
 }
