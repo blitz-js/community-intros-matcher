@@ -19,13 +19,17 @@ async function fetchTable<Fields>(table: string) {
 }
 
 export async function fetchParticipants(): Promise<Participant[]> {
-  const participants = await fetchTable<{
+  const allParticipants = await fetchTable<{
     Dates?: string[];
     "Discord Name": string;
+    Inactive: boolean;
   }>("Participants");
   const dates = await fetchTable<{ ID: number; Participants?: string[] }>(
     "Dates"
   );
+
+  const activeParticipants = allParticipants.filter((p) => !p.fields.Inactive);
+  const participants = activeParticipants;
 
   return participants.map((record) => {
     const { "Discord Name": username, Dates = [] } = record.fields;
